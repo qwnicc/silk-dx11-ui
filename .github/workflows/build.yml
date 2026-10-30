@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (${{ matrix.config }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Release, Debug]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build (warnings are errors)
+        run: cmake --build build --config ${{ matrix.config }} --parallel
+
+      - name: Upload demo
+        if: matrix.config == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: silk-demo
+          path: |
+            build/bin/Release/silk_demo.exe
+            build/bin/Release/assets/
